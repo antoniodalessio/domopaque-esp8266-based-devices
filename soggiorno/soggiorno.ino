@@ -2,16 +2,15 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include "Rele.h"
-#include "Button.h"
+#include "Switch.h"
 
 
 /*
  *  D1: Switch //has INPUT_PULLUP 
- *  D3: Relé
  *  D5: Relé
  */
 
-#define NAME "veranda";
+#define NAME "soggiorno";
 
 //BEGIN SETUP WIFI
 #ifndef STASSID
@@ -29,9 +28,8 @@ ESP8266WebServer server(port);
 
 
 // SETUP ACTUATORS
-Rele rele1(14, "veranda_main_light", "veranda_main_light", 1, 4); //D5
-Rele rele2(0, "veranda_socket", "veranda_socket", 1, -1); //D3
-Button button1(5); //D1
+Rele rele1(14, "soggiorno_main_light", "soggiorno_main_light", 1, 4); //D5
+Switch button1(5);//D1
 
 
 String IpAddress2String(const IPAddress& ipAddress)
@@ -57,6 +55,7 @@ void setupWifi() {
   }
 
   ip = IpAddress2String(WiFi.localIP());
+  WiFi.hostname("domopaque_" + String(deviceName));
 
   Serial.println("");
   Serial.println("WiFi connected");
@@ -84,18 +83,6 @@ void handlePing() {
   actuators_0_range.add("1");
   actuators_0["step"] = 1;
   actuators_0["value"] = rele1.getState();
-
-  //rele 2
-  JsonObject actuators_1 = actuators.createNestedObject();
-  actuators_1["name"] = rele2.name;
-  actuators_1["alias"] = rele2.name;
-
-  JsonArray actuators_1_range = actuators_1.createNestedArray("range");
-  actuators_1_range.add("0");
-  actuators_1_range.add("1");
-  actuators_1["step"] = 1;
-  actuators_1["value"] = rele2.getState();
-
     
   String output = "";
   serializeJson(doc, output);
@@ -120,29 +107,8 @@ void handleRele1() {
   server.send(200, "application/json", "{ \"value\": \""+  val + "\"}");
 }
 
-void handleRele2() {
-  String value = server.arg("plain");
-  StaticJsonDocument<256> doc;
-  deserializeJson(doc, value);
-
-  String val = doc["value"];
-
-  if (val == "1") {
-    rele2.on();
-  }else{
-    rele2.off();
-  }
-  
-  server.send(200, "application/json", "{ \"value\": \""+  val + "\"}");
-}
-
 void handleRele1Value() {
   int val = rele1.getState();
-  server.send(200, "application/json", "{ \"value\": " + String(val) + "}");
-}
-
-void handleRele2Value() {
-  int val = rele2.getState();
   server.send(200, "application/json", "{ \"value\": " + String(val) + "}");
 }
 
@@ -159,9 +125,7 @@ void setup() {
 
   // Actuators
   server.on("/" + rele1.name, HTTP_POST, handleRele1);
-  server.on("/" + rele2.name, HTTP_POST, handleRele2);
   server.on("/" + rele1.name, HTTP_GET, handleRele1Value);
-  server.on("/" + rele2.name, HTTP_GET, handleRele2Value);
 
   server.begin();
   Serial.println("SERVER BEGIN!!");

@@ -11,7 +11,7 @@
  *  D5: Relé
  */
 
-#define NAME "veranda";
+#define NAME "bagno_piano_primo";
 
 //BEGIN SETUP WIFI
 #ifndef STASSID
@@ -29,8 +29,8 @@ ESP8266WebServer server(port);
 
 
 // SETUP ACTUATORS
-Rele rele1(14, "veranda_main_light", "veranda_main_light", 1, 4); //D5
-Rele rele2(0, "veranda_socket", "veranda_socket", 1, -1); //D3
+Rele rele1(14, "electric_stove", "electric_stove", 1, 4); //D5
+Rele rele2(0, "dehumidifier", "dehumidifier", 1, -1); //D3
 Button button1(5); //D1
 
 

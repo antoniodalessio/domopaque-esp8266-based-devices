@@ -11,7 +11,7 @@
  *  D5: Relé
  */
 
-#define NAME "veranda";
+#define NAME "bathroom";
 
 //BEGIN SETUP WIFI
 #ifndef STASSID
@@ -29,9 +29,9 @@ ESP8266WebServer server(port);
 
 
 // SETUP ACTUATORS
-Rele rele1(14, "veranda_main_light", "veranda_main_light", 1, 4); //D5
-Rele rele2(0, "veranda_socket", "veranda_socket", 1, -1); //D3
-Button button1(5); //D1
+Rele rele1(14, "bathroom_dehumidifier", "bathroom_dehumidifier", 1, -1); //D5
+Rele rele2(0, "bathroom_heater", "bathroom_heater", 1, -1); //D3
+Rele rele3(0, "bathroom_air_freshener", "bathroom_air_freshener", 1, -1); //D3
 
 
 String IpAddress2String(const IPAddress& ipAddress)
@@ -74,7 +74,7 @@ void handlePing() {
   JsonArray sensors = doc.createNestedArray("sensors");
   JsonArray actuators = doc.createNestedArray("actuators");
   
-  //rele 1
+  // rele 1
   JsonObject actuators_0 = actuators.createNestedObject();
   actuators_0["name"] = rele1.name;
   actuators_0["alias"] = rele1.name;
@@ -85,7 +85,7 @@ void handlePing() {
   actuators_0["step"] = 1;
   actuators_0["value"] = rele1.getState();
 
-  //rele 2
+  // rele 2
   JsonObject actuators_1 = actuators.createNestedObject();
   actuators_1["name"] = rele2.name;
   actuators_1["alias"] = rele2.name;
@@ -96,6 +96,17 @@ void handlePing() {
   actuators_1["step"] = 1;
   actuators_1["value"] = rele2.getState();
 
+  // rele 3
+  JsonObject actuators_2 = actuators.createNestedObject();
+  actuators_2["name"] = rele3.name;
+  actuators_2["alias"] = rele3.name;
+
+  JsonArray actuators_2_range = actuators_2.createNestedArray("range");
+  actuators_2_range.add("0");
+  actuators_2_range.add("1");
+  actuators_2["step"] = 1;
+  actuators_2["value"] = rele3.getState();
+
     
   String output = "";
   serializeJson(doc, output);
@@ -103,8 +114,7 @@ void handlePing() {
 
 }
 
-
-void handleRele1() {
+void handleRele(Rele rele) {
   String value = server.arg("plain");
   StaticJsonDocument<256> doc;
   deserializeJson(doc, value);
@@ -112,43 +122,44 @@ void handleRele1() {
   String val = doc["value"];
 
   if (val == "1") {
-      rele1.on();
+    rele.on();
   }else{
-    rele1.off();
+    rele.off();
   }
   
   server.send(200, "application/json", "{ \"value\": \""+  val + "\"}");
+
+}
+
+void handleRele1() {
+  handleRele(rele1);
 }
 
 void handleRele2() {
-  String value = server.arg("plain");
-  StaticJsonDocument<256> doc;
-  deserializeJson(doc, value);
-
-  String val = doc["value"];
-
-  if (val == "1") {
-    rele2.on();
-  }else{
-    rele2.off();
-  }
-  
-  server.send(200, "application/json", "{ \"value\": \""+  val + "\"}");
+  handleRele(rele2);
 }
 
-void handleRele1Value() {
-  int val = rele1.getState();
+void handleRele3() {
+  handleRele(rele3);
+}
+
+void handleReleValue(Rele rele) {
+  int val = rele.getState();
   server.send(200, "application/json", "{ \"value\": " + String(val) + "}");
 }
 
-void handleRele2Value() {
-  int val = rele2.getState();
-  server.send(200, "application/json", "{ \"value\": " + String(val) + "}");
+void handleReleValue1() {
+  handleReleValue(rele1);
 }
 
-void toggleRele1() {
-  rele1.toggle();
+void handleReleValue2() {
+  handleReleValue(rele2);
 }
+
+void handleReleValue3() {
+  handleReleValue(rele3);
+}
+
 
 void setup() {
 
@@ -156,24 +167,21 @@ void setup() {
   
   setupWifi();
   server.on("/ping", handlePing);
-
+  
   // Actuators
   server.on("/" + rele1.name, HTTP_POST, handleRele1);
   server.on("/" + rele2.name, HTTP_POST, handleRele2);
-  server.on("/" + rele1.name, HTTP_GET, handleRele1Value);
-  server.on("/" + rele2.name, HTTP_GET, handleRele2Value);
+  server.on("/" + rele3.name, HTTP_POST, handleRele3);
 
+  server.on("/" + rele1.name, HTTP_GET, handleReleValue1);
+  server.on("/" + rele2.name, HTTP_GET, handleReleValue2);
+  server.on("/" + rele3.name, HTTP_GET, handleReleValue3);
+  
   server.begin();
   Serial.println("SERVER BEGIN!!");
  
 }
 
-void handleSwitch() {
-  button1.onChange(toggleRele1);
-}
-
-
 void loop() {
-  handleSwitch();
   server.handleClient();
 }
