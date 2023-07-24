@@ -27,6 +27,13 @@ const char* deviceName = NAME;
 
 ESP8266WebServer server(port);
 
+/* 
+
+arancio/rosso dal portafrutti: led
+nero/bianco switch(interruttore)
+
+*/ 
+
 
 // SETUP ACTUATORS
 Rele rele1(14, "veranda_main_light", "veranda_main_light", 1, 4); //D5
