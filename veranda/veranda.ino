@@ -15,8 +15,8 @@
 
 //BEGIN SETUP WIFI
 #ifndef STASSID
-#define STASSID "Vodafone-50278807"
-#define STAPSK  "adhbm3yv8j2lx3i"
+#define STASSID "FASTWEB-PEPE4F"
+#define STAPSK  "NEZJ4XCX4T"
 #endif
 
 const char* ssid     = STASSID;
